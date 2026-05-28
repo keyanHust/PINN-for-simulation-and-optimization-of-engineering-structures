@@ -248,7 +248,7 @@ if __name__ == "__main__":
     gb_max_t = torch.tensor(GB_MAX, device=device, dtype=torch.float64)
 
     print(">>> Phase 1: Adam optimizer (coarse tuning)...")
-    optimizer_adam = torch.optim.Adam(model.parameters(), lr=4e-4)
+    optimizer_adam = torch.optim.AdamW(model.parameters(), lr=1e-3)
     for epoch in range(30001):
         p_batch = generate_sampled_forces(128, mins_t, maxs_t, cb_list, device)
         gb_batch = gb_min_t + torch.rand(128, 1, device=device, dtype=torch.float64) * (gb_max_t - gb_min_t)
@@ -267,7 +267,7 @@ if __name__ == "__main__":
     optimizer_lbfgs = torch.optim.LBFGS(
         model.parameters(),
         lr=0.1,
-        max_iter=150,
+        max_iter=50,
         history_size=100,
         tolerance_grad=1e-7,
         line_search_fn="strong_wolfe"
@@ -283,7 +283,7 @@ if __name__ == "__main__":
         loss.backward()
         return loss
 
-    for i in range(301):
+    for i in range(51):
         loss = optimizer_lbfgs.step(closure)
         mae_mm = check_val_error(model, K_sys, Fg_unit, cb_list, cons_dofs, device, gb_min_t, gb_max_t)
         print(f"LBFGS Step {i:2d} | Loss: {loss.item():.6e} | Uy MAE: {mae_mm:.4f} mm")
